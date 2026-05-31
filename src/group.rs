@@ -100,6 +100,13 @@ impl Group {
         cmd
     }
 
+    pub fn run_accessible(&mut self) -> Result<(), String> {
+        for field in &mut self.fields {
+            field.run_accessible()?;
+        }
+        Ok(())
+    }
+
     pub fn view(&self) -> String {
         let mut out = String::new();
         if !self.title.is_empty() { out.push_str(&self.title); out.push('\n'); }
