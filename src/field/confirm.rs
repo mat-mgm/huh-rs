@@ -85,4 +85,83 @@ impl Field for Confirm {
     fn is_done(&self) -> bool { !self.focused }
     fn validate(&self) -> Result<(), String> { Ok(()) }
     fn key(&self) -> Option<&str> { self.key.as_deref() }
+
+    fn run_accessible(&mut self) -> Result<(), String> {
+        use std::io::{self, BufRead, Write};
+        let default_str = if self.value { "[Y/n]" } else { "[y/N]" };
+        let prompt = if self.title.is_empty() { "Choose" } else { &self.title };
+        print!("{} {}: ", prompt, default_str);
+        io::stdout().flush().map_err(|e| e.to_string())?;
+        let mut line = String::new();
+        io::stdin().lock().read_line(&mut line).map_err(|e| e.to_string())?;
+        let trimmed = line.trim().to_lowercase();
+        self.value = match trimmed.as_str() {
+            "y" | "yes" => true,
+            "n" | "no"  => false,
+            ""          => self.value,
+            _           => return Err(format!("invalid input: {}", trimmed)),
+        };
+        Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use bubbletea_rs::{Key, KeyCode, KeyMod, KeyPressMsg};
+
+    fn key_msg(code: KeyCode) -> bubbletea_rs::Msg {
+        bubbletea_rs::message::msg(KeyPressMsg(Key {
+            code,
+            modifiers: KeyMod::default(),
+            text: match code {
+                KeyCode::Char(c) => c.to_string(),
+                _ => String::new(),
+            },
+            is_repeat: false,
+        }))
+    }
+
+    #[test]
+    fn toggle_with_h_l() {
+        let mut c = Confirm::new().with_value(false);
+        c.focus();
+        c.update(&key_msg(KeyCode::Char('h')));
+        assert!(c.value());
+        c.update(&key_msg(KeyCode::Char('l')));
+        assert!(!c.value());
+    }
+
+    #[test]
+    fn accept_reject_keys() {
+        let mut c = Confirm::new().with_value(false);
+        c.focus();
+        c.update(&key_msg(KeyCode::Char('y')));
+        assert!(c.value());
+        c.update(&key_msg(KeyCode::Char('n')));
+        assert!(!c.value());
+    }
+
+    #[test]
+    fn no_update_when_not_focused() {
+        let mut c = Confirm::new().with_value(false);
+        c.update(&key_msg(KeyCode::Char('y')));
+        assert!(!c.value());
+    }
+
+    #[test]
+    fn view_shows_selection() {
+        let c = Confirm::new().with_value(true);
+        let v = c.view();
+        assert!(v.contains("[ Yes ]"));
+        let c = Confirm::new().with_value(false);
+        let v = c.view();
+        assert!(v.contains("[ No ]"));
+    }
+
+    #[test]
+    fn validate_always_ok() {
+        let c = Confirm::new();
+        assert!(c.validate().is_ok());
+    }
 }

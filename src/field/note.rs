@@ -44,4 +44,38 @@ impl Field for Note {
     fn is_done(&self) -> bool { !self.focused }
     fn validate(&self) -> Result<(), String> { Ok(()) }
     fn key(&self) -> Option<&str> { self.key.as_deref() }
+
+    fn run_accessible(&mut self) -> Result<(), String> {
+        if !self.title.is_empty() { println!("{}", self.title); }
+        if !self.body.is_empty()  { println!("{}", self.body); }
+        Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn view_shows_title_and_body() {
+        let n = Note::new().with_title("Hello").with_body("World");
+        let v = n.view();
+        assert!(v.contains("Hello"));
+        assert!(v.contains("World"));
+    }
+
+    #[test]
+    fn focus_and_blur() {
+        let mut n = Note::new();
+        assert!(n.is_done());
+        n.focus();
+        assert!(!n.is_done());
+        n.blur();
+        assert!(n.is_done());
+    }
+
+    #[test]
+    fn validate_ok() {
+        assert!(Note::new().validate().is_ok());
+    }
 }

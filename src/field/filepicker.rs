@@ -74,3 +74,36 @@ impl Field for FilePicker {
     }
     fn key(&self) -> Option<&str> { self.key.as_deref() }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn initial_state_not_done() {
+        let fp = FilePicker::new();
+        assert!(!fp.is_done());
+        assert!(fp.value().is_none());
+    }
+
+    #[test]
+    fn validate_without_selection_is_err() {
+        let fp = FilePicker::new();
+        assert!(fp.validate().is_err());
+    }
+
+    #[test]
+    fn view_shows_title() {
+        let fp = FilePicker::new().with_title("Pick file");
+        assert!(fp.view().contains("Pick file"));
+    }
+
+    #[test]
+    fn focus_sets_focused() {
+        let mut fp = FilePicker::new();
+        fp.focus();
+        assert!(fp.focused);
+        fp.blur();
+        assert!(!fp.focused);
+    }
+}
