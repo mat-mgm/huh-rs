@@ -32,4 +32,10 @@ pub trait Field: Send {
     fn key(&self) -> Option<&str> {
         None
     }
+
+    /// Run the field in accessible (plain-text) mode, writing prompt to stdout
+    /// and reading response from stdin.  Default: no-op (display-only fields).
+    fn run_accessible(&mut self) -> Result<(), String> {
+        Ok(())
+    }
 }
