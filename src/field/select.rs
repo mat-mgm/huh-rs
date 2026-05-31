@@ -194,4 +194,118 @@ impl<T: Clone + Send + 'static> Field for Select<T> {
     fn key(&self) -> Option<&str> {
         self.key.as_deref()
     }
+
+    fn run_accessible(&mut self) -> Result<(), String> {
+        use std::io::{self, BufRead, Write};
+        let prompt = if self.title.is_empty() { "Select" } else { &self.title };
+        println!("{}:", prompt);
+        for (i, opt) in self.options.iter().enumerate() {
+            println!("  {}: {}", i + 1, opt.label);
+        }
+        let n = self.options.len();
+        loop {
+            print!("Enter number (1-{}): ", n);
+            io::stdout().flush().map_err(|e| e.to_string())?;
+            let mut line = String::new();
+            io::stdin().lock().read_line(&mut line).map_err(|e| e.to_string())?;
+            let trimmed = line.trim();
+            if let Ok(idx) = trimmed.parse::<usize>() {
+                if idx >= 1 && idx <= n {
+                    self.cursor = idx - 1;
+                    return (self.validate)(&self.options[self.cursor].value);
+                }
+            }
+            eprintln!("Please enter a number between 1 and {}.", n);
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use bubbletea_rs::{Key, KeyCode, KeyMod, KeyPressMsg};
+
+    fn key_msg(code: KeyCode) -> bubbletea_rs::Msg {
+        bubbletea_rs::message::msg(KeyPressMsg(Key {
+            code,
+            modifiers: KeyMod::default(),
+            text: match code {
+                KeyCode::Char(c) => c.to_string(),
+                _ => String::new(),
+            },
+            is_repeat: false,
+        }))
+    }
+
+    fn opts() -> Vec<FieldOption<&'static str>> {
+        vec![
+            FieldOption::new("Alpha", "a"),
+            FieldOption::new("Beta", "b"),
+            FieldOption::new("Gamma", "c"),
+        ]
+    }
+
+    #[test]
+    fn navigate_down_and_up() {
+        let mut s = Select::new().with_options(opts());
+        s.focus();
+        assert_eq!(s.value(), Some(&"a"));
+        s.update(&key_msg(KeyCode::Down));
+        assert_eq!(s.value(), Some(&"b"));
+        s.update(&key_msg(KeyCode::Up));
+        assert_eq!(s.value(), Some(&"a"));
+    }
+
+    #[test]
+    fn goto_top_bottom() {
+        let mut s = Select::new().with_options(opts());
+        s.focus();
+        s.update(&key_msg(KeyCode::End));
+        assert_eq!(s.value(), Some(&"c"));
+        s.update(&key_msg(KeyCode::Home));
+        assert_eq!(s.value(), Some(&"a"));
+    }
+
+    #[test]
+    fn down_wraps_around() {
+        let mut s = Select::new().with_options(opts());
+        s.focus();
+        s.update(&key_msg(KeyCode::End));
+        s.update(&key_msg(KeyCode::Down));
+        assert_eq!(s.value(), Some(&"a"));
+    }
+
+    #[test]
+    fn filter_narrows_options() {
+        let mut s = Select::new().with_options(opts());
+        s.focus();
+        // Enter filter mode with '/'
+        s.update(&key_msg(KeyCode::Char('/')));
+        assert!(s.filtering);
+        // Type 'b' to filter
+        s.update(&key_msg(KeyCode::Char('b')));
+        assert_eq!(s.filter_text, "b");
+        // Only Beta visible; exit filter with esc
+        s.update(&key_msg(KeyCode::Esc));
+        assert!(!s.filtering);
+    }
+
+    #[test]
+    fn view_marks_selection() {
+        let s = Select::new().with_options(opts());
+        let v = s.view();
+        assert!(v.contains("> Alpha") || v.contains("> "));
+    }
+
+    #[test]
+    fn validate_no_options_is_err() {
+        let s = Select::<&str>::new();
+        assert!(s.validate().is_err());
+    }
+
+    #[test]
+    fn validate_with_option_is_ok() {
+        let s = Select::new().with_options(opts());
+        assert!(s.validate().is_ok());
+    }
 }
