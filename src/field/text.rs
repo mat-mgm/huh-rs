@@ -113,4 +113,62 @@ impl Field for Text {
     fn key(&self) -> Option<&str> {
         self.key.as_deref()
     }
+
+    fn run_accessible(&mut self) -> Result<(), String> {
+        use std::io::{self, BufRead, Write};
+        let prompt = if self.title.is_empty() { "Text" } else { &self.title };
+        println!("{} (enter blank line to finish):", prompt);
+        let stdin = io::stdin();
+        let mut buf = String::new();
+        for line in stdin.lock().lines() {
+            let l = line.map_err(|e| e.to_string())?;
+            if l.is_empty() { break; }
+            if !buf.is_empty() { buf.push('\n'); }
+            buf.push_str(&l);
+        }
+        let _ = io::stdout().flush();
+        self.inner.set_value(&buf);
+        (self.validate)(&buf)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn focus_blur_done() {
+        let mut t = Text::new();
+        assert!(t.is_done());
+        t.focus();
+        assert!(!t.is_done());
+        t.blur();
+        assert!(t.is_done());
+    }
+
+    #[test]
+    fn validate_passes_empty_by_default() {
+        let t = Text::new();
+        assert!(t.validate().is_ok());
+    }
+
+    #[test]
+    fn validate_custom_fn() {
+        let t = Text::new().with_validate(|s: &String| {
+            if s.len() < 10 { Err("too short".into()) } else { Ok(()) }
+        });
+        assert!(t.validate().is_err());
+    }
+
+    #[test]
+    fn view_contains_title() {
+        let t = Text::new().with_title("Bio");
+        assert!(t.view().contains("Bio"));
+    }
+
+    #[test]
+    fn key_accessor() {
+        let t = Text::new().with_key("bio");
+        assert_eq!(t.key(), Some("bio"));
+    }
 }

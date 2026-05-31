@@ -127,4 +127,58 @@ impl Field for Input {
     fn key(&self) -> Option<&str> {
         self.key.as_deref()
     }
+
+    fn run_accessible(&mut self) -> Result<(), String> {
+        use std::io::{self, BufRead, Write};
+        let prompt = if self.title.is_empty() { "Input" } else { &self.title };
+        print!("{}: ", prompt);
+        io::stdout().flush().map_err(|e| e.to_string())?;
+        let mut line = String::new();
+        io::stdin().lock().read_line(&mut line).map_err(|e| e.to_string())?;
+        let trimmed = line.trim_end_matches('\n').trim_end_matches('\r');
+        self.inner.set_value(trimmed);
+        (self.validate)(&trimmed.to_string()).map_err(|e| e)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn focus_blur_done() {
+        let mut i = Input::new();
+        assert!(i.is_done());
+        i.focus();
+        assert!(!i.is_done());
+        i.blur();
+        assert!(i.is_done());
+    }
+
+    #[test]
+    fn validate_passes_empty_by_default() {
+        let i = Input::new();
+        assert!(i.validate().is_ok());
+    }
+
+    #[test]
+    fn validate_custom_fn() {
+        let i = Input::new()
+            .with_validate(|s: &String| {
+                if s.is_empty() { Err("required".into()) } else { Ok(()) }
+            });
+        assert!(i.validate().is_err());
+    }
+
+    #[test]
+    fn view_contains_title() {
+        let i = Input::new().with_title("Name");
+        assert!(i.view().contains("Name"));
+    }
+
+    #[test]
+    fn key_accessor() {
+        let i = Input::new().with_key("name");
+        assert_eq!(i.key(), Some("name"));
+    }
 }
