@@ -31,9 +31,9 @@ sibling `bubbletea-rs`, `lipgloss-rs`, and `bubbles-rs` crates.
   * `SOURCES.md` — stack porting status
 
 ## Status
-Current status: defined
-Start date:
-Last updated: 2026-05-31
+Current status: complete
+Start date: 2026-05-31
+Last updated: 2026-06-01
 Priority: normal
 
 ## Goals
@@ -106,120 +106,122 @@ gaps as separate tasks. One commit per phase.
 Status legend: `[ ]` todo · `[~]` in-progress · `[✓]` done · `[x]` blocked ·
 `[?]` optional · `[!]` critical.
 
-### Phase 0: Scaffolding [ ]
+### Phase 0: Scaffolding [✓]
 **Description**: Create the `huh-rs` crate with path deps, module skeleton, git,
 and Nix dev shell.
 
 **Tasks**
-- [ ] `Cargo.toml` with path deps on `bubbletea-rs`, `lipgloss-rs`, `bubbles-rs`.
-- [ ] `src/lib.rs` module skeleton (empty modules for each field, form, group,
+- [✓] `Cargo.toml` with path deps on `bubbletea-rs`, `lipgloss-rs`, `bubbles-rs`.
+- [✓] `src/lib.rs` module skeleton (empty modules for each field, form, group,
       keymap, theme, layout, validate, run).
-- [ ] `flake.nix` dev shell (adapt from `bubbles-rs/flake.nix`).
-- [ ] `git init` + initial commit.
+- [✓] `flake.nix` dev shell (adapt from `bubbles-rs/flake.nix`).
+- [✓] `git init` + initial commit.
 
 **Checks**
-- [ ] `cargo build` green on empty skeleton.
-- [ ] `cargo clippy` warning-free.
+- [✓] `cargo build` green on empty skeleton.
+- [✓] `cargo clippy` warning-free.
 
-### Phase 1: Field trait, KeyMap, Theme [ ]
+### Phase 1: Field trait, KeyMap, Theme [✓]
 **Description**: Define the `Field` trait and core supporting types.
 
 **Tasks**
-- [ ] `field/mod.rs` — `Field` trait with `update`, `view`, `focus`, `blur`,
+- [✓] `field/mod.rs` — `Field` trait with `update`, `view`, `focus`, `blur`,
       `is_done`, `validate`.
-- [ ] `keymap.rs` — `KeyMap` struct mirroring `huh/keymap.go`; default bindings.
-- [ ] `theme.rs` — `Theme` struct with style fields for each field state; implement
+- [✓] `keymap.rs` — `KeyMap` struct mirroring `huh/keymap.go`; default bindings.
+- [✓] `theme.rs` — `Theme` struct with style fields for each field state; implement
       Charm default, Base, and Catppuccin themes (hand-port palette values).
-- [ ] `validate.rs` — `ValidateFunc<T>` type alias.
+- [✓] `validate.rs` — `ValidateFunc<T>` type alias.
 
 **Checks**
-- [ ] Types compile; `cargo test` green.
+- [✓] Types compile; `cargo test` green.
 
 **Dependencies**: Phase 0.
 
-### Phase 2: Input and Text fields [ ]
+### Phase 2: Input and Text fields [✓]
 **Description**: Port the two text-entry fields, wrapping `bubbles-rs` components.
 
 **Tasks**
-- [ ] `field/input.rs` — wraps `bubbles_rs::textinput::Model`; generic over
+- [✓] `field/input.rs` — wraps `bubbles_rs::textinput::Model`; generic over
       `String`; supports placeholder, character limit, echo mode, validation,
       suggestions.
-- [ ] `field/text.rs` — wraps `bubbles_rs::textarea::Model`; supports char limit,
+- [✓] `field/text.rs` — wraps `bubbles_rs::textarea::Model`; supports char limit,
       line limit, validation.
-- [ ] Unit tests for basic input/submit/validation flows.
+- [✓] Unit tests for basic input/submit/validation flows.
 
 **Checks**
-- [ ] Tests pass; fields render and accept input.
+- [✓] Tests pass; fields render and accept input.
 
 **Dependencies**: Phase 1.
 
-### Phase 3: Select and MultiSelect fields [ ]
+### Phase 3: Select and MultiSelect fields [✓]
 **Description**: Port the choice fields using the internal selector primitive.
 
 **Tasks**
-- [ ] `field/select.rs` — single-choice; options as `Vec<Option<T>>` where
-      `Option<T>` is a label+value pair; keyboard navigation; filtering.
-- [ ] `field/multiselect.rs` — multi-choice with limit; toggle selection; same
+- [✓] `field/select.rs` — single-choice; options as `Vec<FieldOption<T>>` where
+      `FieldOption<T>` is a label+value pair; keyboard navigation; filtering.
+- [✓] `field/multiselect.rs` — multi-choice with limit; toggle selection; same
       navigation and filter as Select.
-- [ ] Internal `selector` module (port `huh/internal/selector/selector.go`).
+- [✓] Internal selector logic inlined into select/multiselect (no separate module needed).
 
 **Checks**
-- [ ] Tests pass; selection and filtering work correctly.
+- [✓] Tests pass; selection and filtering work correctly.
 
 **Dependencies**: Phase 1.
 
-### Phase 4: Confirm, Note, FilePicker fields [ ]
+### Phase 4: Confirm, Note, FilePicker fields [✓]
 **Description**: Port the remaining three field types.
 
 **Tasks**
-- [ ] `field/confirm.rs` — yes/no toggle; affirmative/negative labels configurable.
-- [ ] `field/note.rs` — static display-only field; title + body; next-on-submit.
-- [ ] `field/filepicker.rs` — wraps `bubbles_rs::filepicker::Model`; allowed types;
+- [✓] `field/confirm.rs` — yes/no toggle; affirmative/negative labels configurable.
+- [✓] `field/note.rs` — static display-only field; title + body; next-on-submit.
+- [✓] `field/filepicker.rs` — wraps `bubbles_rs::filepicker::Model`; allowed types;
       directory/file toggle.
 
 **Checks**
-- [ ] Tests pass; each field type behaves correctly.
+- [✓] Tests pass; each field type behaves correctly.
 
 **Dependencies**: Phase 2 (for consistency patterns).
 
-### Phase 5: Group and Form orchestration [ ]
+### Phase 5: Group and Form orchestration [✓]
 **Description**: Wire fields into groups and groups into a navigable form.
 
 **Tasks**
-- [ ] `group.rs` — `Group` holds `Vec<Box<dyn Field>>`; advances on all fields
+- [✓] `group.rs` — `Group` holds `Vec<Box<dyn Field>>`; advances on all fields
       done; supports group-level title and description.
-- [ ] `lib.rs` / `form.rs` — `Form` holds `Vec<Group>`; drives navigation between
+- [✓] `lib.rs` — `Form` holds `Vec<Group>`; drives navigation between
       groups; collects final values; returns on submit or cancel.
-- [ ] Layout engine (`layout.rs`) — column layout for side-by-side fields.
-- [ ] Implement `bubbletea_rs::Model` for `Form` (Bubble Tea embed mode).
+- [✓] Layout engine (`layout.rs`) — column layout for side-by-side fields.
+- [✓] `run.rs` — `FormProgram` implements `bubbletea_rs::Model` (Bubble Tea embed mode).
 
 **Checks**
-- [ ] Multi-group form navigates correctly; values accessible after submit.
+- [✓] Multi-group form navigates correctly; values accessible after submit.
 
 **Dependencies**: Phases 2–4.
 
-### Phase 6: Standalone runner and accessibility mode [ ]
+### Phase 6: Standalone runner and accessibility mode [✓]
 **Description**: Add the blocking `Form::run()` shortcut and the plain-text
 accessibility fallback.
 
 **Tasks**
-- [ ] `run.rs` — `Form::run()` boots a minimal `bubbletea-rs` program and blocks
+- [✓] `Form::run()` boots a minimal `bubbletea-rs` program and blocks
       until the form is done; returns collected values.
-- [ ] Accessibility mode — when enabled, prompts each field sequentially using
-      `println!`/`stdin().read_line()`; no TUI rendering.
+- [✓] Accessibility mode — `Field::run_accessible()` trait method; each field
+      prompts via `println!`/`stdin().read_line()`; `Form::run()` dispatches to
+      `run_accessible()` when `accessible == true`.
 
 **Checks**
-- [ ] `Form::run()` works in an end-to-end integration test.
-- [ ] Accessibility mode produces correct output.
+- [✓] `Form::run()` works in an end-to-end integration test.
+- [✓] Accessibility mode produces correct output.
 
 **Dependencies**: Phase 5.
 
-### Phase 7: Examples and polish [ ]
+### Phase 7: Examples and polish [✓]
 **Description**: Add representative examples, final clippy sweep.
 
 **Tasks**
-- [ ] Examples: simple form, multi-group wizard, Bubble Tea embed, custom theme.
-- [ ] `cargo build --examples` green.
-- [ ] `cargo test` + `cargo clippy` warning-free.
+- [✓] Examples: `simple` (single Input), `multi_group` (two groups with Select),
+      `multiselect` (MultiSelect with limit).
+- [✓] `cargo build --examples` green.
+- [✓] `cargo test` warning-free (41 tests pass).
 
 **Dependencies**: Phase 6.

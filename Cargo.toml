@@ -16,3 +16,11 @@ tokio        = { version = "1", features = ["rt-multi-thread", "macros"] }
 [[example]]
 name = "simple"
 path = "examples/simple.rs"
+
+[[example]]
+name = "multi_group"
+path = "examples/multi_group.rs"
+
+[[example]]
+name = "multiselect"
+path = "examples/multiselect.rs"
