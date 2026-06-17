@@ -220,6 +220,16 @@ impl<T: Clone + Send + 'static> Field for Select<T> {
     }
 }
 
+// Expose selected value as a string for external callers when T: ToString.
+// We can only provide this for the erased Field trait with a default impl,
+// so concrete impls are on a per-type basis where T: ToString.
+impl<T: Clone + Send + ToString + 'static> Select<T> {
+    /// Return the selected value as a string (for value extraction after run).
+    pub fn selected_string(&self) -> String {
+        self.options.get(self.cursor).map_or_else(String::new, |o| o.value.to_string())
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

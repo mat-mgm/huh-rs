@@ -208,6 +208,9 @@ accessibility fallback.
 - [✓] Accessibility mode — `Field::run_accessible()` trait method; each field
       prompts via `println!`/`stdin().read_line()`; `Form::run()` dispatches to
       `run_accessible()` when `accessible == true`.
+- [✓] Expose `Form::groups()` and `Group::fields()` to allow programmatic inspection of fields.
+- [✓] Add `Field::value_string()` (with implementation for `Input`) and `Select::selected_string()` to extract string values after a form run (especially for accessible mode).
+- [✓] Make `Form::run_accessible` public and take `&mut self` so values are retained after running.
 
 **Checks**
 - [✓] `Form::run()` works in an end-to-end integration test.

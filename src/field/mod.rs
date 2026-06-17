@@ -38,4 +38,10 @@ pub trait Field: Send {
     fn run_accessible(&mut self) -> Result<(), String> {
         Ok(())
     }
+
+    /// Return the field's current value as a string. Used for value extraction
+    /// after a form run. Default returns an empty string.
+    fn value_string(&self) -> String {
+        String::new()
+    }
 }

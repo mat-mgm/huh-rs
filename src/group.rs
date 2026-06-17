@@ -38,6 +38,8 @@ impl Group {
     pub fn with_width(mut self, w: usize) -> Self { self.width = w; self }
     pub fn with_height(mut self, h: usize) -> Self { self.height = h; self }
 
+    pub fn fields(&self) -> &[Box<dyn Field>] { &self.fields }
+
     /// True when every field in the group is done.
     pub fn is_done(&self) -> bool {
         self.fields.iter().all(|f| f.is_done())

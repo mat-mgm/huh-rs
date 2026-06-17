@@ -139,6 +139,10 @@ impl Field for Input {
         self.inner.set_value(trimmed);
         (self.validate)(&trimmed.to_string()).map_err(|e| e)
     }
+
+    fn value_string(&self) -> String {
+        self.inner.value()
+    }
 }
 
 #[cfg(test)]

@@ -54,6 +54,8 @@ impl Form {
 
     pub fn state(&self) -> FormState { self.state }
 
+    pub fn groups(&self) -> &[Group] { &self.groups }
+
     pub fn update(&mut self, msg: &Msg) -> Option<Cmd> {
         use bubbletea_rs::{InterruptMsg, QuitMsg};
 
@@ -92,7 +94,7 @@ impl Form {
 
     /// Run the form as a standalone blocking program.
     /// Returns `Ok(())` on completion, `Err(ErrUserAborted)` on abort.
-    pub fn run(self) -> Result<()> {
+    pub fn run(mut self) -> Result<()> {
         if self.accessible {
             return self.run_accessible();
         }
@@ -106,7 +108,10 @@ impl Form {
         })
     }
 
-    fn run_accessible(mut self) -> Result<()> {
+    /// Run the form in accessible (plain-text stdin/stdout) mode.
+    /// Values are retained in the form fields after this returns; access
+    /// them via `groups()[i].fields()[j].value_string()`.
+    pub fn run_accessible(&mut self) -> Result<()> {
         for group in &mut self.groups {
             group.run_accessible().map_err(|e| -> Error { e.into() })?;
         }
