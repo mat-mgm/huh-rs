@@ -116,6 +116,7 @@ and Nix dev shell.
       keymap, theme, layout, validate, run).
 - [✓] `flake.nix` dev shell (adapt from `bubbles-rs/flake.nix`).
 - [✓] `git init` + initial commit.
+- [✓] `.gitignore` to ignore build/target files.
 
 **Checks**
 - [✓] `cargo build` green on empty skeleton.
